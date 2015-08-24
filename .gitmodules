@@ -1,0 +1,3 @@
+[submodule "src/plugin/nutch-selenium"]
+	path = src/plugin/nutch-selenium
+	url = git@github.com:BusinessMonitor/nutch-selenium.git
