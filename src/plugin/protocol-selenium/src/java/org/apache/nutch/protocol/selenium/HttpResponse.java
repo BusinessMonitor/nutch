@@ -70,7 +70,7 @@ public class HttpResponse implements Response {
                     return webDriver.findElement(By.tagName("body")) != null;
                 }
             });
-            String innerHtml = driver.findElement(By.tagName("body")).getAttribute("innerHTML");
+            String innerHtml = driver.findElement(By.tagName("html")).getAttribute("innerHTML");
             code = 200;
             content = innerHtml.getBytes("UTF-8");
         } catch (InterruptedException e) {

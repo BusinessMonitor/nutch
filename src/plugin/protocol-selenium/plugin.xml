@@ -30,7 +30,6 @@
    <requires>
       <import plugin="nutch-extensionpoints"/>
       <import plugin="lib-http"/>
-      <import plugin="lib-selenium"/>
    </requires>
 
    <extension id="org.apache.nutch.protocol.selenium"
