@@ -1,6 +1,31 @@
 Nutch Change Log
 
-Current Development 2.4-SNAPSHOT
+Nutch 2.3.1 Release 22092015 (ddmmyyyy)
+Release Report - http://s.apache.org/nutch_2.3.1
+
+* NUTCH-2168 Parse-tika fails to retrieve parser (snagel, Auro Miralles, lewismc)
+
+* NUTCH-2169 Integrate index-html into Nutch build (snagel)
+
+* NUTCH-2143 GeneratorJob ignores batch id passed as argument (liuqibj, lewismc, snagel)
+
+* NUTCH-2042 parse-html increase chunk size used to detect charset (snagel)
+
+* NUTCH-2107 plugin.xml to validate against plugin.dtd (snagel)
+
+* NUTCH-2130 copyField rawcontent creates error within schema.xml (Sherban Drulea, lewismc, snagel)
+
+* NUTCH-2018 Ensure that the Docker containers for Nutch 2.X are part of the Release Management Documentation (lewismc)
+
+* NUTCH-2105 Update Nutch Cassandra Dockerfile to work with Gora Nutch 2.3.1 (lewismc)
+
+* NUTCH-1946 Upgrade to Gora 0.6.1 (lewismc, hsaputra, Jeroen Vlek)
+
+* NUTCH-2094 Stopping and Restarting a crawl has issues in the Web UI (Prerna Satija via mattmann)
+
+* NUTCH-1679 UpdateDb using batchId, link may override crawled page (Tien Nguyen Manh, Koen Smets, Alfonso Nishikawa, Alexander Kingson via lewismc)
+
+* NUTCH-2077 Upgrade to Tika 1.10 (Michael Joyce, lewismc)
 
 * NUTCH-2045 index-basic incorrect assignment of next fetch time (page.getFetchTime()) as page fetch time (lewismc)
 

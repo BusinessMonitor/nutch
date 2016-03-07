@@ -156,7 +156,7 @@
 
 <property>
   <name>http.agent.version</name>
-  <value>Nutch-2.4-SNAPSHOT</value>
+  <value>Nutch-2.3.1</value>
   <description>A version string to advertise in the User-Agent 
    header.</description>
 </property>
@@ -426,13 +426,13 @@
 
 <property>
   <name>db.fetch.schedule.adaptive.min_interval</name>
-  <value>60.0</value>
+  <value>60</value>
   <description>Minimum fetchInterval, in seconds.</description>
 </property>
 
 <property>
   <name>db.fetch.schedule.adaptive.max_interval</name>
-  <value>31536000.0</value>
+  <value>31536000</value>
   <description>Maximum fetchInterval, in seconds (365 days).
   NOTE: this is limited by db.fetch.interval.max. Pages with
   fetchInterval larger than db.fetch.interval.max
@@ -1206,6 +1206,16 @@
   </description>
 </property>
 
+<property>
+  <name>io.serializations</name>
+  <value>org.apache.hadoop.io.serializer.WritableSerialization,org.apache.hadoop.io.serializer.JavaSerialization</value>
+  <!-- org.apache.hadoop.io.serializer.avro.AvroSpecificSerialization,
+  org.apache.hadoop.io.serializer.avro.AvroReflectSerialization,
+  org.apache.hadoop.io.serializer.avro.AvroGenericSerialization, -->
+  <description>A list of serialization classes that can be used for
+  obtaining serializers and deserializers.</description>
+</property>
+
 <!-- solr index properties -->
 
 <property>
@@ -1331,6 +1341,12 @@
     
   org.apache.gora.memory.store.MemStore
     Gora class for storing data in a Memory based implementation for tests.
+
+  org.apache.gora.mongodb.store.MongoStore
+    Gora class for storing data in MongoDB.
+
+  org.apache.gora.solr.store.SolrStore
+    Gora class for storing data in Apache Solr.
   </description>
 </property>
 

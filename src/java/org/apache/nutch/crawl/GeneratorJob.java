@@ -163,11 +163,20 @@ public class GeneratorJob extends NutchTool implements Tool {
     return fields;
   }
 
+  /** Generate a random batch id */
+  public static String randomBatchId() {
+    long curTime = System.currentTimeMillis();
+    int randomSeed = Math.abs(new Random().nextInt());
+    String batchId = (curTime / 1000) + "-" + randomSeed;
+    return batchId;
+  }
+  
   public Map<String, Object> run(Map<String, Object> args) throws Exception {
     String batchId = (String) args.get(Nutch.ARG_BATCH);
-    if (batchId != null) {
-      getConf().set(GeneratorJob.BATCH_ID, batchId);
+    if (batchId == null) {
+      batchId = randomBatchId();
     }
+    getConf().set(BATCH_ID, batchId);
 
     // map to inverted subset due for fetch, sort by score
     Long topN = null;
@@ -209,7 +218,7 @@ public class GeneratorJob extends NutchTool implements Tool {
     }
     numJobs = 1;
     currentJobNum = 0;
-    currentJob = new NutchJob(getConf(), "generate: " + getConf().get(BATCH_ID));
+    currentJob = NutchJob.getInstance(getConf(), "generate: " + getConf().get(BATCH_ID));
     Collection<WebPage.Field> fields = getFields(currentJob);
     StorageUtils.initMapperJob(currentJob, fields, SelectorEntry.class,
         WebPage.class, GeneratorMapper.class, SelectorEntryPartitioner.class,
@@ -243,10 +252,15 @@ public class GeneratorJob extends NutchTool implements Tool {
     if (topN != Long.MAX_VALUE) {
       LOG.info("GeneratorJob: topN: " + topN);
     }
+    String batchId = getConf().get(BATCH_ID);
     Map<String, Object> results = run(ToolUtil.toArgMap(Nutch.ARG_TOPN, topN,
         Nutch.ARG_CURTIME, curTime, Nutch.ARG_FILTER, filter,
-        Nutch.ARG_NORMALIZE, norm));
-    String batchId = getConf().get(BATCH_ID);
+        Nutch.ARG_NORMALIZE, norm, Nutch.ARG_BATCH, batchId));
+    if (batchId == null) {
+      // use generated random batch id
+      batchId = (String) results.get(BATCH_ID);
+    }
+
     long finish = System.currentTimeMillis();
     long generateCount = (Long) results.get(GENERATE_COUNT);
     LOG.info("GeneratorJob: finished at " + sdf.format(finish)
@@ -284,11 +298,6 @@ public class GeneratorJob extends NutchTool implements Tool {
     long curTime = System.currentTimeMillis(), topN = Long.MAX_VALUE;
     boolean filter = true, norm = true;
 
-    // generate batchId
-    int randomSeed = Math.abs(new Random().nextInt());
-    String batchId = (curTime / 1000) + "-" + randomSeed;
-    getConf().set(BATCH_ID, batchId);
-
     for (int i = 0; i < args.length; i++) {
       if ("-topN".equals(args[i])) {
         topN = Long.parseLong(args[++i]);
@@ -301,9 +310,9 @@ public class GeneratorJob extends NutchTool implements Tool {
       } else if ("-adddays".equals(args[i])) {
         long numDays = Integer.parseInt(args[++i]);
         curTime += numDays * 1000L * 60 * 60 * 24;
-      } else if ("-batchId".equals(args[i]))
+      } else if ("-batchId".equals(args[i])) {
         getConf().set(BATCH_ID, args[++i]);
-      else {
+      } else {
         System.err.println("Unrecognized arg " + args[i]);
         return -1;
       }
