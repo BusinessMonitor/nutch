@@ -64,12 +64,6 @@ public class HttpResponse implements Response {
             // Wait for the page to load, timeout after 3 seconds
             WebDriverWait webDriverWait = new WebDriverWait(driver, timeout);
             Thread.sleep(Math.min(sleep, timeout));
-            webDriverWait.until(new Predicate<WebDriver>() {
-                @Override
-                public boolean apply(WebDriver webDriver) {
-                    return webDriver.findElement(By.tagName("body")) != null;
-                }
-            });
             String innerHtml = driver.findElement(By.tagName("html")).getAttribute("innerHTML");
             code = 200;
             content = innerHtml.getBytes("UTF-8");
