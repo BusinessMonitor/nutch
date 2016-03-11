@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 public class HttpResponse implements Response {
@@ -52,8 +53,18 @@ public class HttpResponse implements Response {
         this.conf = conf;
         this.http = http;
         this.url = url;
+        
+        String externalForm = url.toExternalForm();
+        if(externalForm.startsWith("file://") && !externalForm.startsWith("file:///")) {
+            try {
+                url = new URL(url.toExternalForm().replace("file://", "file:///"));
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-        WebDriver driver = new FirefoxDriver();
+        final WebDriver driver = new FirefoxDriver();
+        LOG.info("Fetching URL " + url);
         try {
             int timeout = http.getTimeout();
 
@@ -64,9 +75,16 @@ public class HttpResponse implements Response {
             // Wait for the page to load, timeout after 3 seconds
             WebDriverWait webDriverWait = new WebDriverWait(driver, timeout);
             Thread.sleep(Math.min(sleep, timeout));
+            webDriverWait.until(new Predicate<WebDriver>() {
+                @Override
+                public boolean apply(WebDriver webDriver) {
+                    return driver.findElement(By.tagName("html")).getAttribute("innerHTML") != null;
+                }
+            });
             String innerHtml = driver.findElement(By.tagName("html")).getAttribute("innerHTML");
             code = 200;
             content = innerHtml.getBytes("UTF-8");
+            LOG.info("Successfully fetched URL " + url);
         } catch (InterruptedException e) {
             LOG.warn("WebDriver was interrupted before trying to fetch response", e);
         } finally {
