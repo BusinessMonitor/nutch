@@ -24,8 +24,11 @@ import org.apache.nutch.metadata.SpellCheckedMetadata;
 import org.apache.nutch.net.protocols.Response;
 import org.apache.nutch.storage.WebPage;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 public class HttpResponse implements Response {
 
@@ -53,6 +57,8 @@ public class HttpResponse implements Response {
         this.conf = conf;
         this.http = http;
         this.url = url;
+
+        getCapabilities(conf);
         
         String externalForm = url.toExternalForm();
         if(externalForm.startsWith("file://") && !externalForm.startsWith("file:///")) {
@@ -63,7 +69,9 @@ public class HttpResponse implements Response {
             }
         }
 
-        final WebDriver driver = new FirefoxDriver();
+
+
+        final WebDriver driver = getDriver(getCapabilities(conf));
         LOG.info("Fetching URL " + url);
         try {
             int timeout = http.getTimeout();
@@ -71,25 +79,45 @@ public class HttpResponse implements Response {
             // This should be extracted to a HTTPRenderBase class or similar
             int sleep = conf.getInt("http.min.render", 1500);
 
+            driver.manage().timeouts().pageLoadTimeout(sleep, TimeUnit.MILLISECONDS);
+
             driver.get(url.toString());
             // Wait for the page to load, timeout after 3 seconds
-            WebDriverWait webDriverWait = new WebDriverWait(driver, timeout);
             Thread.sleep(Math.min(sleep, timeout));
-            webDriverWait.until(new Predicate<WebDriver>() {
-                @Override
-                public boolean apply(WebDriver webDriver) {
-                    return driver.findElement(By.tagName("html")).getAttribute("innerHTML") != null;
-                }
-            });
-            String innerHtml = driver.findElement(By.tagName("html")).getAttribute("innerHTML");
-            code = 200;
-            content = innerHtml.getBytes("UTF-8");
+            getContent(driver);
             LOG.info("Successfully fetched URL " + url);
         } catch (InterruptedException e) {
             LOG.warn("WebDriver was interrupted before trying to fetch response", e);
+        } catch(TimeoutException e) {
+            getContent();
+            LOG.warn("WebDriver timed out, returning original content", e);
         } finally {
             driver.close();
         }
+    }
+
+    private void getContent(WebDriver driver) throws UnsupportedEncodingException {
+        String innerHtml = driver.findElement(By.tagName("html")).getAttribute("innerHTML");
+        code = 200;
+        content = innerHtml.getBytes("UTF-8");
+    }
+
+    private WebDriver getDriver(DesiredCapabilities capabilities) {
+        String hubHost = System.getProperty("selenium.hub.host", "localhost");
+        String hubPort = System.getProperty("selenium.hub.port", "4444");
+
+        try {
+            return new RemoteWebDriver(new URL("http://" + hubHost + ":" + hubPort + "/wd/hub"), capabilities);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private DesiredCapabilities getCapabilities(Configuration conf) {
+        DesiredCapabilities capabilities = DesiredCapabilities.firefox();
+        capabilities.setBrowserName("firefox");
+        capabilities.setJavascriptEnabled(true);
+        return capabilities;
     }
 
     @Override
